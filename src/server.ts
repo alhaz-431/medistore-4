@@ -1,7 +1,7 @@
 import express from 'express';
 import cors from 'cors';
 import dotenv from 'dotenv';
-import { PrismaClient } from '@prisma/client';
+import { PrismaClient } from '../node_modules/.prisma/client/index.js';
 import bcrypt from 'bcrypt';
 import jwt from 'jsonwebtoken';
 
