@@ -30,7 +30,7 @@ app.post('/api/auth/register', async (req: any, res: any) => {
     const hashedPassword = await bcrypt.hash(password, 10);
     
     const user = await prisma.user.create({
-      data: { email, password: hashedPassword, name, role: 'CUSTOMER' }
+      data: { email, password: hashedPassword, name, role: 'CUSTOMER' as any }
     });
     
     res.status(201).json({ message: "User created!", user: { id: user.id, email: user.email } });
@@ -66,10 +66,55 @@ app.get('/api/test-db', async (req, res) => {
   }
 });
 
+// ৫. নতুন অর্ডার তৈরি করা
+app.post('/api/orders', async (req: any, res: any) => {
+  try {
+    const { userId, totalAmount, shippingAddress } = req.body; 
+    const order = await prisma.order.create({
+      data: {
+        userId,
+        totalAmount, // স্কিমা অনুযায়ী নাম ঠিক করা হয়েছে
+        shippingAddress, // স্কিমা অনুযায়ী এটি রিকোয়ার্ড
+        status: 'PLACED' as any, // আপনার Enum এ PENDING নেই, PLACED আছে
+      }
+    });
+    res.status(201).json({ message: "Order placed successfully!", order });
+  } catch (error) {
+    console.error(error);
+    res.status(400).json({ error: "Failed to place order. Make sure userId, totalAmount and shippingAddress are provided." });
+  }
+});
+
+// ৬. সব অর্ডার দেখা (অ্যাডমিনের জন্য)
+app.get('/api/orders', async (req, res) => {
+  try {
+    const orders = await prisma.order.findMany({
+      include: { 
+        user: true,
+        items: true // আপনার স্কিমার রিলেশন অনুযায়ী
+      } 
+    });
+    res.json(orders);
+  } catch (error) {
+    res.status(500).json({ error: "Could not fetch orders" });
+  }
+});
+
+// 7. Orders: Get All Orders (For Admin)
+app.get('/api/orders', async (req, res) => {
+  try {
+    const orders = await prisma.order.findMany({
+      include: { user: true } 
+    });
+    res.json(orders);
+  } catch (error) {
+    res.status(500).json({ error: "Could not fetch orders" });
+  }
+});
+
 // Server Start
 app.listen(PORT, () => {
   console.log(`✅ Server is running on http://localhost:${PORT}`);
 });
-
 
 // Last Updated: Feb 2, 2026 - Sprint 1 Complete 🚀
